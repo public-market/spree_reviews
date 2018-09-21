@@ -8,6 +8,8 @@ class Spree::ReviewsAbility
       review_ability_class.allow_anonymous_reviews? || !user.email.blank?
     end
 
+    can :manage, Spree::Review, user_id: user.id
+
     can :create, Spree::FeedbackReview do
       review_ability_class.allow_anonymous_reviews? || !user.email.blank?
     end

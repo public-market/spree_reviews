@@ -1,7 +1,10 @@
 class Spree::ReviewsController < Spree::StoreController
   helper Spree::BaseHelper
-  before_action :load_product, only: [:index, :new, :create]
-  rescue_from ActiveRecord::RecordNotFound, with: :render_404
+  before_action :load_product, only: [:index, :new, :create, :update]
+
+  load_and_authorize_resource class: Spree::Review
+
+  before_action :format_ratings, only: %i[create update]
 
   def index
     @approved_reviews = Spree::Review.approved.where(product: @product)
@@ -9,22 +12,28 @@ class Spree::ReviewsController < Spree::StoreController
 
   def new
     @review = Spree::Review.new(product: @product)
-    authorize! :create, @review
+    authorize!(:create, @review)
   end
 
-  # save if all ok
   def create
-    params[:review][:rating].sub!(/\s*[^0-9]*\z/, '') unless params[:review][:rating].blank?
-
     @review = Spree::Review.new(review_params)
     @review.product = @product
-    @review.user = spree_current_user if spree_user_signed_in?
+    @review.user ||= spree_current_user if spree_user_signed_in?
     @review.ip_address = request.remote_ip
     @review.locale = I18n.locale.to_s if Spree::Reviews::Config[:track_locale]
 
-    authorize! :create, @review
+    authorize!(:create, @review)
     if @review.save
       flash[:notice] = Spree.t(:review_successfully_submitted)
+      redirect_to spree.product_path(@product)
+    else
+      render :new
+    end
+  end
+
+  def update
+    if @review.update(review_params)
+      flash[:notice] = Spree.t(:review_successfully_updated)
       redirect_to spree.product_path(@product)
     else
       render :new
@@ -43,5 +52,9 @@ class Spree::ReviewsController < Spree::StoreController
 
   def review_params
     params.require(:review).permit(permitted_review_attributes)
+  end
+
+  def format_ratings
+    params[:review][:rating].sub!(/\s*[^0-9]*\z/, '') unless params[:review][:rating].blank?
   end
 end

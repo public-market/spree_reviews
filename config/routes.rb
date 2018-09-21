@@ -10,7 +10,7 @@ Spree::Core::Engine.add_routes do
   end
 
   resources :products, only: [] do
-    resources :reviews, only: [:index, :new, :create] do
+    resources :reviews, only: [:index, :new, :create, :update] do
     end
   end
   post '/reviews/:review_id/feedback(.:format)' => 'feedback_reviews#create', as: :feedback_reviews
