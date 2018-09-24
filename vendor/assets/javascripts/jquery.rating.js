@@ -177,8 +177,8 @@
 			// backward compatibility, form element to plugin
 			input.on('change.rating',function(event){
 				if(event.selfTriggered) return false;
-    $(this).rating('select');
-   });
+			$(this).rating('select');
+		});
 
 			// attach reference to star to input element and vice-versa
 			star.data('rating.input', input.data('rating.star', star));
